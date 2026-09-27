@@ -2,3 +2,4 @@ lambda_package/
 .venv/
 __pycache__/
 *.pyc
+.idea/

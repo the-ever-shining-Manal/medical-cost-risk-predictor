@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Insurance Cost & Risk Predictor — Live Demo</title>
+  <meta name="description" content="Interactive demo for predicting medical insurance charges using Linear Regression with feature interactions." />
+  
+  <!-- Modern Inter Font & Tailwind CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#0d9488',
+              600: '#0f766e',
+              700: '#115e59',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom range slider styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8px;
+      cursor: pointer;
+      background: #e2e8f0;
+      border-radius: 9999px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      height: 22px;
+      width: 22px;
+      border-radius: 50%;
+      background: #0d9488;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -7px;
+      box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.4), 0 2px 4px -2px rgba(13, 148, 136, 0.4);
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #0f766e;
+    }
+    /* Smooth transitions */
+    .btn-toggle {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased selection:bg-teal-500 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-teal-500/20">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Medical Cost Risk Predictor</h1>
+          <p class="text-xs text-slate-500 hidden sm:block">Pure-Math Machine Learning Inference • Production Demo</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span id="apiStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="apiStatusText">Live API Ready</span>
+        </span>
+        <a href="https://github.com/the-ever-shining-Manal/medical-cost-risk-predictor" target="_blank" rel="noopener noreferrer" class="text-xs font-medium text-slate-600 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          <span class="hidden sm:inline">GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    
+    <!-- Hero / Intro -->
+    <div class="mb-8">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-100/70 text-teal-800 text-xs font-semibold mb-3">
+        <span>🚀 Instant Client Demo</span>
+        <span class="text-teal-400">•</span>
+        <span>Linear Regression with BMI × Smoker Interaction</span>
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        Estimate Annual Healthcare Risk & Charges
+      </h2>
+      <p class="text-slate-600 mt-2 max-w-2xl text-sm sm:text-base">
+        Enter patient metrics below to generate real-time actuarial cost predictions. Powered by a hand-derived linear model deployed with zero heavy dependencies.
+      </p>
+
+      <!-- Quick Preset Buttons -->
+      <div class="mt-4 flex flex-wrap items-center gap-2 pt-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1">Quick Presets:</span>
+        <button type="button" onclick="loadPreset('young_healthy')" class="text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-teal-400 hover:bg-teal-50/50 text-slate-700 transition">
+          🌱 Young Non-Smoker
+        </button>
+        <button type="button" onclick="loadPreset('family_parent')" class="text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-teal-400 hover:bg-teal-50/50 text-slate-700 transition">
+          👨‍👩‍👧 Average Parent (2 Kids)
+        </button>
+        <button type="button" onclick="loadPreset('high_risk')" class="text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-rose-400 hover:bg-rose-50/50 text-slate-700 transition">
+          ⚠️ High Risk Smoker
+        </button>
+        <button type="button" onclick="loadPreset('postman_case')" class="text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-amber-400 hover:bg-amber-50/50 text-slate-700 transition">
+          📌 Postman Reference (30y, BMI 28)
+        </button>
+      </div>
+    </div>
+
+    <!-- 2-Column Responsive Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- LEFT COLUMN: Patient Input Form (7 cols) -->
+      <section class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7">
+        <form id="predictionForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+
+          <!-- 1. Age Input & Slider -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label for="ageInput" class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <span>Age</span>
+                <span class="text-xs font-normal text-slate-500">(18 – 100 years)</span>
+              </label>
+              <div class="flex items-center gap-1">
+                <input
+                  type="number"
+                  id="ageInput"
+                  min="18"
+                  max="100"
+                  value="30"
+                  class="w-16 px-2.5 py-1 text-center font-bold text-teal-700 bg-teal-50 border border-teal-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  oninput="syncAgeFromNumber(this.value)"
+                />
+                <span class="text-xs font-medium text-slate-500">yrs</span>
+              </div>
+            </div>
+            <input
+              type="range"
+              id="ageSlider"
+              min="18"
+              max="100"
+              value="30"
+              oninput="syncAgeFromSlider(this.value)"
+            />
+            <div class="flex justify-between text-[11px] text-slate-400 font-medium px-0.5 mt-1">
+              <span>18</span>
+              <span>40</span>
+              <span>65</span>
+              <span>100</span>
+            </div>
+          </div>
+
+          <!-- 2. BMI with quick toggle calculator -->
+          <div class="border-t border-slate-100 pt-5">
+            <div class="flex items-center justify-between mb-2">
+              <label for="bmiInput" class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <span>Body Mass Index (BMI)</span>
+                <span id="bmiCategoryLabel" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Overweight</span>
+              </label>
+              <button
+                type="button"
+                onclick="toggleBmiCalculator()"
+                class="text-xs font-semibold text-teal-600 hover:text-teal-800 hover:underline flex items-center gap-1"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <span>Don't know BMI?</span>
+              </button>
+            </div>
+
+            <!-- BMI Quick Calculator Expandable Drawer -->
+            <div id="bmiHelper" class="hidden mb-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+              <p class="font-semibold text-slate-700 mb-2">Quick BMI Calculator:</p>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-slate-500 mb-1">Height (cm):</label>
+                  <input type="number" id="calcHeight" placeholder="175" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs" oninput="calculateBmiFromHeightWeight()">
+                </div>
+                <div>
+                  <label class="block text-slate-500 mb-1">Weight (kg):</label>
+                  <input type="number" id="calcWeight" placeholder="78" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs" oninput="calculateBmiFromHeightWeight()">
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <input
+                type="range"
+                id="bmiSlider"
+                min="15"
+                max="55"
+                step="0.1"
+                value="28.0"
+                oninput="syncBmiFromSlider(this.value)"
+              />
+              <input
+                type="number"
+                id="bmiInput"
+                min="15"
+                max="55"
+                step="0.1"
+                value="28.0"
+                class="w-20 px-2.5 py-1 text-center font-bold text-teal-700 bg-teal-50 border border-teal-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                oninput="syncBmiFromNumber(this.value)"
+              />
+            </div>
+            <div class="flex justify-between text-[11px] text-slate-400 font-medium px-0.5 mt-1">
+              <span>15 (Underweight)</span>
+              <span>25 (Normal)</span>
+              <span>30 (Obese)</span>
+              <span>55</span>
+            </div>
+          </div>
+
+          <!-- 3. Smoker Status (HIGH IMPACT SWITCH) -->
+          <div class="border-t border-slate-100 pt-5">
+            <div class="flex items-start justify-between">
+              <div>
+                <label class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <span>Smoking Status</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 font-semibold">Highest Cost Impact</span>
+                </label>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Multiplied by BMI: Smokers with BMI &gt; 30 see exponential cost increases.
+                </p>
+              </div>
+
+              <!-- Switch Toggle -->
+              <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  id="smokerNoBtn"
+                  onclick="setSmoker('no')"
+                  class="btn-toggle px-4 py-1.5 rounded-lg text-xs font-bold transition"
+                >
+                  Non-Smoker
+                </button>
+                <button
+                  type="button"
+                  id="smokerYesBtn"
+                  onclick="setSmoker('yes')"
+                  class="btn-toggle px-4 py-1.5 rounded-lg text-xs font-bold transition"
+                >
+                  Smoker 🚬
+                </button>
+              </div>
+            </div>
+            <input type="hidden" id="smokerInput" value="yes" />
+          </div>
+
+          <!-- 4. Biological Sex & Children (Grid) -->
+          <div class="border-t border-slate-100 pt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <!-- Biological Sex -->
+            <div>
+              <label class="block text-sm font-bold text-slate-800 mb-2">Biological Sex</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  id="sexFemaleBtn"
+                  onclick="setSex('female')"
+                  class="btn-toggle py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2"
+                >
+                  <span>Female</span>
+                </button>
+                <button
+                  type="button"
+                  id="sexMaleBtn"
+                  onclick="setSex('male')"
+                  class="btn-toggle py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2"
+                >
+                  <span>Male</span>
+                </button>
+              </div>
+              <input type="hidden" id="sexInput" value="male" />
+            </div>
+
+            <!-- Children / Dependents -->
+            <div>
+              <label class="block text-sm font-bold text-slate-800 mb-2">
+                Children / Dependents
+                <span class="text-xs font-normal text-slate-500">(+$427/child)</span>
+              </label>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="setChildren(0)" class="child-btn flex-1 py-2 text-xs font-bold rounded-lg border">0</button>
+                <button type="button" onclick="setChildren(1)" class="child-btn flex-1 py-2 text-xs font-bold rounded-lg border">1</button>
+                <button type="button" onclick="setChildren(2)" class="child-btn flex-1 py-2 text-xs font-bold rounded-lg border">2</button>
+                <button type="button" onclick="setChildren(3)" class="child-btn flex-1 py-2 text-xs font-bold rounded-lg border">3</button>
+                <button type="button" onclick="setChildren(4)" class="child-btn flex-1 py-2 text-xs font-bold rounded-lg border">4</button>
+                <button type="button" onclick="setChildren(5)" class="child-btn flex-1 py-2 text-xs font-bold rounded-lg border">5+</button>
+              </div>
+              <input type="hidden" id="childrenInput" value="2" />
+            </div>
+          </div>
+
+          <!-- 5. US Geographic Region -->
+          <div class="border-t border-slate-100 pt-5">
+            <label class="block text-sm font-bold text-slate-800 mb-2">
+              US Geographic Region
+              <span class="text-xs font-normal text-slate-500">(Northeast is model baseline)</span>
+            </label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button
+                type="button"
+                onclick="setRegion('northeast')"
+                class="region-btn p-2.5 rounded-xl border text-left text-xs font-medium transition"
+                id="region-northeast"
+              >
+                <div class="font-bold">Northeast</div>
+                <div class="text-[10px] text-slate-400">Baseline</div>
+              </button>
+              <button
+                type="button"
+                onclick="setRegion('northwest')"
+                class="region-btn p-2.5 rounded-xl border text-left text-xs font-medium transition"
+                id="region-northwest"
+              >
+                <div class="font-bold">Northwest</div>
+                <div class="text-[10px] text-slate-400">-$175 / yr</div>
+              </button>
+              <button
+                type="button"
+                onclick="setRegion('southeast')"
+                class="region-btn p-2.5 rounded-xl border text-left text-xs font-medium transition"
+                id="region-southeast"
+              >
+                <div class="font-bold">Southeast</div>
+                <div class="text-[10px] text-slate-400">-$785 / yr</div>
+              </button>
+              <button
+                type="button"
+                onclick="setRegion('southwest')"
+                class="region-btn p-2.5 rounded-xl border text-left text-xs font-medium transition"
+                id="region-southwest"
+              >
+                <div class="font-bold">Southwest</div>
+                <div class="text-[10px] text-slate-400">-$823 / yr</div>
+              </button>
+            </div>
+            <input type="hidden" id="regionInput" value="southeast" />
+          </div>
+
+          <!-- Action Button & Auto-calc switch -->
+          <div class="border-t border-slate-100 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 order-2 sm:order-1">
+              <input type="checkbox" id="autoCalcToggle" checked class="w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
+              <label for="autoCalcToggle" class="text-xs text-slate-600 cursor-pointer select-none">
+                Auto-update on any change
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              id="predictBtn"
+              class="w-full sm:w-auto order-1 sm:order-2 px-7 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-teal-500/25 transition active:scale-98 flex items-center justify-center gap-2 text-sm"
+            >
+              <svg id="btnSpinner" class="hidden animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Predict Medical Cost</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </div>
+
+        </form>
+      </section>
+
+
+      <!-- RIGHT COLUMN: Real-Time Results & Breakdown (5 cols) -->
+      <section class="lg:col-span-5 space-y-6">
+
+        <!-- Result Card -->
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 sm:p-7 shadow-xl shadow-slate-900/10 relative overflow-hidden">
+          <!-- Background decoration -->
+          <div class="absolute -right-8 -bottom-8 w-40 h-40 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs uppercase tracking-wider font-bold text-slate-400">Predicted Insurance Cost</span>
+            <span id="riskBadge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              Elevated Risk
+            </span>
+          </div>
+
+          <!-- Big Price Output -->
+          <div class="my-4">
+            <div class="text-xs text-slate-400 mb-1">Annual Charges (Estimated)</div>
+            <div id="costOutput" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-mono">
+              $21,526.15
+            </div>
+            <div class="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
+              <span>Approx.</span>
+              <span id="monthlyOutput" class="font-semibold text-teal-300 font-mono">$1,793.85</span>
+              <span>/ month</span>
+            </div>
+          </div>
+
+          <!-- Risk Meter Bar -->
+          <div class="mt-6 pt-5 border-t border-slate-700/60">
+            <div class="flex justify-between text-xs text-slate-300 mb-1.5">
+              <span>Risk Tier Scale</span>
+              <span id="riskMeterLabel" class="font-semibold text-amber-400">Elevated ($14k–$28k)</span>
+            </div>
+            <div class="w-full bg-slate-700/60 h-2.5 rounded-full overflow-hidden p-0.5 flex">
+              <div class="h-full bg-emerald-500 rounded-l-full" style="width: 25%"></div>
+              <div class="h-full bg-blue-500" style="width: 25%"></div>
+              <div class="h-full bg-amber-500" style="width: 25%"></div>
+              <div class="h-full bg-rose-500 rounded-r-full" style="width: 25%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+              <span>$2k</span>
+              <span>$7k</span>
+              <span>$14k</span>
+              <span>$28k+</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Factor Breakdown Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center justify-between">
+            <span>Model Factor Breakdown</span>
+            <span class="text-[11px] font-normal text-slate-500">Linear Contributions</span>
+          </h3>
+
+          <div class="space-y-2.5 text-xs" id="breakdownList">
+            <!-- Dynamic factor items -->
+            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+              <span class="text-slate-600">Base Intercept</span>
+              <span class="font-mono font-semibold text-slate-700">-$2,829.13</span>
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+              <span class="text-slate-600">Age (30 × $249.84)</span>
+              <span class="font-mono font-semibold text-slate-700">+$7,495.30</span>
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+              <span class="text-slate-600">BMI Baseline (28 × $43.13)</span>
+              <span class="font-mono font-semibold text-slate-700">+$1,207.66</span>
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-rose-50 border border-rose-100">
+              <span class="text-rose-700 font-medium">Smoker × BMI Interaction</span>
+              <span class="font-mono font-bold text-rose-700">+$15,828.14</span>
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+              <span class="text-slate-600">Children (2 × $427.43)</span>
+              <span class="font-mono font-semibold text-slate-700">+$854.86</span>
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+              <span class="text-slate-600">Sex & Region Adjustment</span>
+              <span class="font-mono font-semibold text-slate-700">-$1,030.67</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raw API Inspector Accordion (Great for technical recruiters & clients!) -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <button
+            type="button"
+            onclick="toggleApiInspector()"
+            class="w-full px-5 py-3.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-bold text-slate-700 transition"
+          >
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-mono font-bold">POST</span>
+              <span>Inspect API Request & Response</span>
+            </div>
+            <svg id="inspectorArrow" class="w-4 h-4 text-slate-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <div id="inspectorContent" class="hidden p-4 space-y-3 border-t border-slate-200 text-[11px] font-mono bg-slate-900 text-slate-200">
+            <div>
+              <div class="text-slate-400 uppercase text-[10px] tracking-wider mb-1 font-sans font-bold flex justify-between">
+                <span>Payload Sent to API:</span>
+                <span id="apiLatencyBadge" class="text-teal-400 font-normal">-- ms</span>
+              </div>
+              <pre id="rawRequestJson" class="p-2.5 bg-slate-950 rounded-lg text-emerald-400 overflow-x-auto">{}</pre>
+            </div>
+
+            <div>
+              <div class="text-slate-400 uppercase text-[10px] tracking-wider mb-1 font-sans font-bold">
+                API Response (<span id="apiStatusCode" class="text-emerald-400">200 OK</span>):
+              </div>
+              <pre id="rawResponseJson" class="p-2.5 bg-slate-950 rounded-lg text-teal-300 overflow-x-auto">{}</pre>
+            </div>
+
+            <div class="pt-2 flex justify-between items-center">
+              <span id="apiSourceLabel" class="text-slate-400 text-[10px]">Source: Live Vercel / Model Engine</span>
+              <button type="button" onclick="copyCurlCommand()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-sans font-semibold transition">
+                📋 Copy cURL
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+  </main>
+
+  <!-- Application Logic & Prediction Script -->
+  <script>
+    // Pure-Math Linear Regression Model (Matching predict.py & Scikit-Learn coefficients)
+    const MODEL = {
+      intercept: -2829.1327635126363,
+      coef: {
+        age: 249.84327744,
+        bmi: 43.13064979,
+        children: 427.42967705,
+        bmi_smoker: 565.29057405,
+        sex_male: -245.29519316,
+        region_northwest: -175.42191295,
+        region_southeast: -785.36999684,
+        region_southwest: -823.28512076,
+      }
+    };
+
+    // State
+    const state = {
+      age: 30,
+      bmi: 28.0,
+      children: 2,
+      sex: 'male',
+      smoker: 'yes',
+      region: 'southeast'
+    };
+
+    // Preset configurations
+    const presets = {
+      young_healthy: { age: 22, bmi: 21.5, children: 0, sex: 'female', smoker: 'no', region: 'northeast' },
+      family_parent: { age: 38, bmi: 27.2, children: 2, sex: 'female', smoker: 'no', region: 'northwest' },
+      high_risk:     { age: 52, bmi: 34.0, children: 1, sex: 'male', smoker: 'yes', region: 'southeast' },
+      postman_case:  { age: 30, bmi: 28.0, children: 2, sex: 'male', smoker: 'yes', region: 'southeast' }
+    };
+
+    // Initialize UI on DOM load
+    document.addEventListener('DOMContentLoaded', () => {
+      syncUI();
+      executePrediction();
+    });
+
+    // Sync state values to form inputs and button active states
+    function syncUI() {
+      // Age
+      document.getElementById('ageInput').value = state.age;
+      document.getElementById('ageSlider').value = state.age;
+
+      // BMI
+      document.getElementById('bmiInput').value = Number(state.bmi).toFixed(1);
+      document.getElementById('bmiSlider').value = Number(state.bmi).toFixed(1);
+      updateBmiBadge(state.bmi);
+
+      // Smoker
+      const smokerYes = document.getElementById('smokerYesBtn');
+      const smokerNo = document.getElementById('smokerNoBtn');
+      if (state.smoker === 'yes') {
+        smokerYes.className = "btn-toggle px-4 py-1.5 rounded-lg text-xs font-bold bg-rose-600 text-white shadow-sm";
+        smokerNo.className = "btn-toggle px-4 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900";
+      } else {
+        smokerYes.className = "btn-toggle px-4 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900";
+        smokerNo.className = "btn-toggle px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-sm";
+      }
+      document.getElementById('smokerInput').value = state.smoker;
+
+      // Sex
+      const sexFemale = document.getElementById('sexFemaleBtn');
+      const sexMale = document.getElementById('sexMaleBtn');
+      if (state.sex === 'female') {
+        sexFemale.className = "btn-toggle py-2 px-3 rounded-xl border text-xs font-bold bg-teal-50 border-teal-500 text-teal-800 shadow-sm";
+        sexMale.className = "btn-toggle py-2 px-3 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50";
+      } else {
+        sexFemale.className = "btn-toggle py-2 px-3 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50";
+        sexMale.className = "btn-toggle py-2 px-3 rounded-xl border text-xs font-bold bg-teal-50 border-teal-500 text-teal-800 shadow-sm";
+      }
+      document.getElementById('sexInput').value = state.sex;
+
+      // Children
+      document.querySelectorAll('.child-btn').forEach((btn, index) => {
+        if (index === Number(state.children)) {
+          btn.className = "child-btn flex-1 py-2 text-xs font-bold rounded-lg border bg-teal-600 border-teal-600 text-white shadow-sm";
+        } else {
+          btn.className = "child-btn flex-1 py-2 text-xs font-bold rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50";
+        }
+      });
+      document.getElementById('childrenInput').value = state.children;
+
+      // Region
+      ['northeast', 'northwest', 'southeast', 'southwest'].forEach(r => {
+        const btn = document.getElementById(`region-${r}`);
+        if (btn) {
+          if (state.region === r) {
+            btn.className = "region-btn p-2.5 rounded-xl border text-left text-xs font-medium bg-teal-50 border-teal-500 text-teal-900 shadow-sm";
+          } else {
+            btn.className = "region-btn p-2.5 rounded-xl border border-slate-200 text-slate-600 text-left text-xs font-medium hover:bg-slate-50";
+          }
+        }
+      });
+      document.getElementById('regionInput').value = state.region;
+    }
+
+    // Input Handlers
+    function syncAgeFromSlider(val) {
+      state.age = parseInt(val, 10);
+      document.getElementById('ageInput').value = state.age;
+      onDataChanged();
+    }
+    function syncAgeFromNumber(val) {
+      const parsed = parseInt(val, 10);
+      if (!isNaN(parsed) && parsed >= 18 && parsed <= 100) {
+        state.age = parsed;
+        document.getElementById('ageSlider').value = state.age;
+        onDataChanged();
+      }
+    }
+
+    function syncBmiFromSlider(val) {
+      state.bmi = parseFloat(val);
+      document.getElementById('bmiInput').value = Number(state.bmi).toFixed(1);
+      updateBmiBadge(state.bmi);
+      onDataChanged();
+    }
+    function syncBmiFromNumber(val) {
+      const parsed = parseFloat(val);
+      if (!isNaN(parsed) && parsed >= 10 && parsed <= 70) {
+        state.bmi = parsed;
+        document.getElementById('bmiSlider').value = state.bmi;
+        updateBmiBadge(state.bmi);
+        onDataChanged();
+      }
+    }
+
+    function updateBmiBadge(bmi) {
+      const badge = document.getElementById('bmiCategoryLabel');
+      if (bmi < 18.5) {
+        badge.textContent = "Underweight";
+        badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700";
+      } else if (bmi < 25) {
+        badge.textContent = "Normal";
+        badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700";
+      } else if (bmi < 30) {
+        badge.textContent = "Overweight";
+        badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700";
+      } else {
+        badge.textContent = "Obese (High Risk)";
+        badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700";
+      }
+    }
+
+    function setSmoker(val) {
+      state.smoker = val;
+      syncUI();
+      onDataChanged();
+    }
+
+    function setSex(val) {
+      state.sex = val;
+      syncUI();
+      onDataChanged();
+    }
+
+    function setChildren(count) {
+      state.children = count;
+      syncUI();
+      onDataChanged();
+    }
+
+    function setRegion(r) {
+      state.region = r;
+      syncUI();
+      onDataChanged();
+    }
+
+    function loadPreset(key) {
+      const p = presets[key];
+      if (p) {
+        Object.assign(state, p);
+        syncUI();
+        executePrediction();
+      }
+    }
+
+    function onDataChanged() {
+      if (document.getElementById('autoCalcToggle').checked) {
+        executePrediction();
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      executePrediction();
+    }
+
+    // Toggle BMI quick calculator drawer
+    function toggleBmiCalculator() {
+      const el = document.getElementById('bmiHelper');
+      el.classList.toggle('hidden');
+    }
+
+    function calculateBmiFromHeightWeight() {
+      const h = parseFloat(document.getElementById('calcHeight').value);
+      const w = parseFloat(document.getElementById('calcWeight').value);
+      if (h > 50 && w > 20) {
+        const heightMeters = h / 100;
+        const bmi = (w / (heightMeters * heightMeters)).toFixed(1);
+        if (bmi >= 15 && bmi <= 60) {
+          state.bmi = parseFloat(bmi);
+          syncUI();
+          onDataChanged();
+        }
+      }
+    }
+
+    // Offline Mathematical Fallback Engine
+    function computeLocalPrediction(input) {
+      const smokerNum = input.smoker === 'yes' ? 1 : 0;
+      const bmiSmoker = input.bmi * smokerNum;
+      const sexMale = input.sex === 'male' ? 1 : 0;
+      const regionNw = input.region === 'northwest' ? 1 : 0;
+      const regionSe = input.region === 'southeast' ? 1 : 0;
+      const regionSw = input.region === 'southwest' ? 1 : 0;
+
+      const ageContrib = MODEL.coef.age * input.age;
+      const bmiContrib = MODEL.coef.bmi * input.bmi;
+      const childrenContrib = MODEL.coef.children * input.children;
+      const smokerBmiContrib = MODEL.coef.bmi_smoker * bmiSmoker;
+      const sexContrib = MODEL.coef.sex_male * sexMale;
+      const regionContrib =
+        (MODEL.coef.region_northwest * regionNw) +
+        (MODEL.coef.region_southeast * regionSe) +
+        (MODEL.coef.region_southwest * regionSw);
+
+      const raw = ageContrib + bmiContrib + childrenContrib + smokerBmiContrib + sexContrib + regionContrib + MODEL.intercept;
+      const prediction = Math.max(raw, 1000.0);
+
+      let riskCategory = "Low Risk";
+      let riskColor = "emerald";
+      if (prediction > 28000) {
+        riskCategory = "High Risk";
+        riskColor = "rose";
+      } else if (prediction > 14000) {
+        riskCategory = "Elevated Risk";
+        riskColor = "amber";
+      } else if (prediction > 7000) {
+        riskCategory = "Moderate Risk";
+        riskColor = "blue";
+      }
+
+      return {
+        prediction,
+        monthlyCost: prediction / 12,
+        riskCategory,
+        riskColor,
+        source: 'local_engine',
+        breakdown: {
+          baseIntercept: MODEL.intercept,
+          ageFactor: ageContrib,
+          bmiFactor: bmiContrib,
+          smokingInteractionFactor: smokerBmiContrib,
+          dependentsFactor: childrenContrib,
+          sexAdjustment: sexContrib,
+          regionalAdjustment: regionContrib,
+        }
+      };
+    }
+
+    // Execute Prediction API Call
+    async function executePrediction() {
+      const spinner = document.getElementById('btnSpinner');
+      const payload = {
+        age: Number(state.age),
+        bmi: Number(state.bmi),
+        children: Number(state.children),
+        sex: state.sex,
+        smoker: state.smoker,
+        region: state.region
+      };
+
+      document.getElementById('rawRequestJson').textContent = JSON.stringify(payload, null, 2);
+
+      const startTime = performance.now();
+      let result = null;
+
+      try {
+        spinner.classList.remove('hidden');
+
+        // Call the Vercel / serverless backend API
+        const response = await fetch('/api/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const latency = Math.round(performance.now() - startTime);
+        document.getElementById('apiLatencyBadge').textContent = `${latency} ms`;
+        document.getElementById('apiStatusCode').textContent = `${response.status} ${response.statusText || 'OK'}`;
+
+        if (response.ok) {
+          result = await response.json();
+          document.getElementById('rawResponseJson').textContent = JSON.stringify(result, null, 2);
+          document.getElementById('apiStatusText').textContent = "Live API Connected";
+          document.getElementById('apiSourceLabel').textContent = `Source: ${result.source === 'aws_lambda' ? 'AWS Lambda + API Gateway' : 'Vercel Serverless Function'}`;
+        } else {
+          throw new Error(`API returned HTTP ${response.status}`);
+        }
+      } catch (err) {
+        // Graceful fallback to client-side model engine (e.g. if testing statically or offline)
+        const latency = Math.round(performance.now() - startTime);
+        document.getElementById('apiLatencyBadge').textContent = `${latency} ms (Client Math)`;
+        document.getElementById('apiStatusCode').textContent = "Offline Fallback";
+        document.getElementById('apiSourceLabel').textContent = "Source: In-Browser Formula Fallback";
+        result = computeLocalPrediction(payload);
+        document.getElementById('rawResponseJson').textContent = JSON.stringify(result, null, 2);
+      } finally {
+        spinner.classList.add('hidden');
+      }
+
+      if (result) {
+        renderPredictionResults(result);
+      }
+    }
+
+    // Render results to DOM
+    function renderPredictionResults(data) {
+      const pred = Number(data.prediction);
+      const monthly = Number(data.monthlyCost || pred / 12);
+
+      // Price text
+      document.getElementById('costOutput').textContent = `$${pred.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('monthlyOutput').textContent = `$${monthly.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      // Risk Badge
+      const riskBadge = document.getElementById('riskBadge');
+      const riskLabel = document.getElementById('riskMeterLabel');
+
+      if (pred > 28000) {
+        riskBadge.textContent = "High Risk";
+        riskBadge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30";
+        riskLabel.textContent = "High Risk (> $28,000)";
+        riskLabel.className = "font-semibold text-rose-400";
+      } else if (pred > 14000) {
+        riskBadge.textContent = "Elevated Risk";
+        riskBadge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        riskLabel.textContent = "Elevated Risk ($14,000 – $28,000)";
+        riskLabel.className = "font-semibold text-amber-400";
+      } else if (pred > 7000) {
+        riskBadge.textContent = "Moderate Risk";
+        riskBadge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30";
+        riskLabel.textContent = "Moderate Risk ($7,000 – $14,000)";
+        riskLabel.className = "font-semibold text-blue-400";
+      } else {
+        riskBadge.textContent = "Low Risk";
+        riskBadge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        riskLabel.textContent = "Low Risk (< $7,000)";
+        riskLabel.className = "font-semibold text-emerald-400";
+      }
+
+      // Breakdown list
+      const b = data.breakdown || {};
+      const formatCurrency = (val) => {
+        const sign = val >= 0 ? '+' : '-';
+        return `${sign}$${Math.abs(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      };
+
+      const breakdownHtml = `
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+          <span class="text-slate-600">Base Model Intercept</span>
+          <span class="font-mono font-semibold text-slate-700">${formatCurrency(b.baseIntercept ?? MODEL.intercept)}</span>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+          <span class="text-slate-600">Age Contribution (${state.age} yrs)</span>
+          <span class="font-mono font-semibold text-slate-700">${formatCurrency(b.ageFactor ?? (MODEL.coef.age * state.age))}</span>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+          <span class="text-slate-600">BMI Baseline (${Number(state.bmi).toFixed(1)})</span>
+          <span class="font-mono font-semibold text-slate-700">${formatCurrency(b.bmiFactor ?? (MODEL.coef.bmi * state.bmi))}</span>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg ${state.smoker === 'yes' ? 'bg-rose-50 border border-rose-200' : 'bg-slate-50'}">
+          <span class="${state.smoker === 'yes' ? 'text-rose-800 font-semibold' : 'text-slate-600'}">Smoker × BMI Interaction</span>
+          <span class="font-mono font-bold ${state.smoker === 'yes' ? 'text-rose-700' : 'text-slate-700'}">${formatCurrency(b.smokingInteractionFactor ?? 0)}</span>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+          <span class="text-slate-600">Dependents (${state.children} children)</span>
+          <span class="font-mono font-semibold text-slate-700">${formatCurrency(b.dependentsFactor ?? (MODEL.coef.children * state.children))}</span>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50">
+          <span class="text-slate-600">Sex & Region Adjustments</span>
+          <span class="font-mono font-semibold text-slate-700">${formatCurrency((b.sexAdjustment ?? 0) + (b.regionalAdjustment ?? 0))}</span>
+        </div>
+      `;
+      document.getElementById('breakdownList').innerHTML = breakdownHtml;
+    }
+
+    // Toggle API Inspector Drawer
+    function toggleApiInspector() {
+      const content = document.getElementById('inspectorContent');
+      const arrow = document.getElementById('inspectorArrow');
+      content.classList.toggle('hidden');
+      arrow.classList.toggle('rotate-180');
+    }
+
+    // Copy cURL command for developers & clients
+    function copyCurlCommand() {
+      const payload = JSON.stringify({
+        age: Number(state.age),
+        bmi: Number(state.bmi),
+        children: Number(state.children),
+        sex: state.sex,
+        smoker: state.smoker,
+        region: state.region
+      });
+      const curl = `curl -X POST https://your-demo-url.vercel.app/api/predict \\\n  -H "Content-Type: application/json" \\\n  -d '${payload}'`;
+      navigator.clipboard.writeText(curl).then(() => {
+        alert("cURL command copied to clipboard!");
+      });
+    }
+  </script>
+
+</body>
+</html>

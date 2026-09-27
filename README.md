@@ -6,6 +6,23 @@ This project covers the full pipeline: raw data → EDA → feature engineering 
 
 ---
 
+## 🌐 Live Interactive Demo Webpage
+
+A simple, client-facing demo webpage allows anyone to test predictions with **zero technical knowledge**:
+
+👉 **Live Demo:** [Medical Cost Risk Predictor Demo](https://medical-cost-risk-predictor.vercel.app) *(or your deployed Vercel URL)*
+
+### Key Features:
+- **Instant Risk Scoring:** Type in or slide `age`, `bmi`, `children`, `sex`, `smoker`, and `region` to see predicted annual and monthly insurance charges.
+- **⚡ One-Click Presets:** Instant testing scenarios (Young Adult, Average Parent, High-Risk Smoker, and the Postman reference test case).
+- **📐 Integrated BMI Helper:** Non-technical users can enter height & weight to calculate BMI on the fly.
+- **📊 Transparent Factor Breakdown:** Visualizes exact linear dollar contributions for each factor (age, baseline BMI, smoker × BMI interaction, dependents, and regional adjustments).
+- **🔍 Behind-the-Scenes API Inspector:** Live drawer displaying the exact JSON payload sent over the wire, response latency (ms), HTTP status, and response JSON.
+- **cURL Generator:** 1-click command copying for developers and API consumers.
+
+
+---
+
 ## Dataset
 
 [Medical Cost Personal Dataset](https://www.kaggle.com/datasets/mirichoi0218/insurance) (Kaggle) — 1,338 records with `age`, `sex`, `bmi`, `children`, `smoker`, `region`, and `charges`.
@@ -89,10 +106,45 @@ Sending the same request without a valid `private-key` header returns `401 Unaut
 
 ---
 
+## 🚀 Demo Webpage & Vercel Deployment
+
+The demo is architected to be deployed in minutes on **Vercel** with zero backend infrastructure management.
+
+### Option 1: One-Click Deploy via Vercel Web Dashboard (Recommended)
+1. Push this repository to your GitHub account (`the-ever-shining-Manal/medical-cost-risk-predictor`).
+2. Go to [vercel.com](https://vercel.com) and click **"Add New Project"**.
+3. Import this repository.
+4. Leave build settings as default (Framework Preset: **Other**, Output Directory: root).
+5. *(Optional)* Under **Environment Variables**, you can add:
+   - `AWS_API_GATEWAY_URL`: Your AWS Lambda API Gateway URL (if you want the demo to call AWS Lambda).
+   - `AWS_PRIVATE_KEY`: Your Lambda private key header.
+   *(If not set, Vercel's serverless function will automatically run the pure linear regression formula with identical mathematical output!)*
+6. Click **Deploy** — your live demo URL is ready in under 30 seconds!
+
+### Option 2: Deploy via Vercel CLI
+```bash
+# 1. Login to Vercel (free account)
+npx vercel login
+
+# 2. Deploy to production
+npx vercel --prod
+```
+
+### Running Locally
+To test the demo webpage and API locally on your computer:
+```bash
+# Start local Node server
+node server.js
+```
+Then open [http://localhost:3001](http://localhost:3001) in your browser.
+
+---
+
 ## What I'd do differently in production
 - Use AWS Secrets Manager (or at least environment variables) instead of a hardcoded key string in code.
 - Add CloudWatch-based logging of incoming requests for monitoring.
 - Consider a non-linear model or a threshold-based feature to better capture the smoker × BMI relationship observed in EDA.
 
 ## Tech stack
-Python, pandas, scikit-learn (training only), seaborn/matplotlib (EDA), AWS Lambda, AWS API Gateway, Postman (testing)
+Python, pandas, scikit-learn (training only), seaborn/matplotlib (EDA), AWS Lambda, AWS API Gateway, Vercel Serverless, Tailwind CSS, Postman (testing)
+
