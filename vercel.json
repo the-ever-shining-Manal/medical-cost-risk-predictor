@@ -1,13 +1,5 @@
 {
-  "version": 2,
-  "name": "medical-cost-risk-predictor",
   "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/api/predict",
-      "destination": "/api/predict.js"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
