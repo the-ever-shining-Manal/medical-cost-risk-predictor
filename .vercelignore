@@ -1,0 +1,4 @@
+requirements.txt
+*.pkl
+insurance.csv
+notebook.ipynb

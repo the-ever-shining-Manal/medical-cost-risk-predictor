@@ -1,0 +1,9 @@
+{
+  "name": "medical-cost-risk-predictor",
+  "version": "1.0.0",
+  "description": "Medical Cost Risk Predictor interactive demo and API",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  }
+}
